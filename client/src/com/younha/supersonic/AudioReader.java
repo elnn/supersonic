@@ -1,13 +1,22 @@
 package com.younha.supersonic;
 
+import java.util.ArrayList;
+
+import com.younha.supersonic.MainActivity.MainHandler;
+
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 
 public class AudioReader
 {
+	private static final int FRAME_SIZE = 1024;
+	private Handler handler;
+	
     public static abstract class Listener
     {
         public static final int ERR_OK = 0;
@@ -17,37 +26,20 @@ public class AudioReader
         public abstract void onReadError(int error);
     }
      
-    public int calculatePowerDb(short[] sdata, int off, int samples)
+    public AudioReader(Handler handler)
     {
-        double sum = 0;
-        double sqsum = 0;
-        for (int i = 0; i < samples; i++)
-        {
-            final long v = sdata[off + i];
-            sum += v;
-            sqsum += v * v;
-        }
-        double power = (sqsum - sum * sum / samples) / samples;
-         
-        power /= MAX_16_BIT * MAX_16_BIT;
-         
-        double result = Math.log10(power) * 10f + FUDGE;
-        return (int)result;
-    }
-     
-    public AudioReader()
-    {
+    	this.handler = handler;
     }
      
     public void startReader(int rate, int block, Listener listener)
     {
         Log.i(TAG, "Reader: Start Thread");
-        synchronized (this)
+        // synchronized (this)
         {
-            int audioBuf = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+            int audioBuf = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT) * 2;
              
-            audioInput = new AudioRecord(MediaRecorder.AudioSource.MIC, rate, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+            audioInput = new AudioRecord(MediaRecorder.AudioSource.MIC, rate, AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT, audioBuf);
             inputBlockSize = block;
             sleepTime = (long) (1000f / ((float) rate / (float) block));
@@ -68,28 +60,25 @@ public class AudioReader
         }
     }
      
-    public void stopReader()
-    {
+    public void stopReader() {
         Log.i(TAG, "Reader: Signal Stop");
-        synchronized (this)
-        {
+        
+        synchronized (this) {
             running = false;
         }
-        try
-        {
+        
+        try {
             if (readerThread != null)
                 readerThread.join();
-        } catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
             ;
         }
+        
         readerThread = null;
          
         // Kill the audio input.
-        synchronized (this)
-        {
-            if (audioInput != null)
-            {
+        synchronized (this) {
+            if (audioInput != null) {
                 audioInput.release();
                 audioInput = null;
             }
@@ -98,37 +87,31 @@ public class AudioReader
         Log.i(TAG, "Reader: Thread Stopped");
     }
      
-    private void readerRun()
-    {
+    private void readerRun() {
         short[] buffer;
         int index, readSize;
          
         int timeout = 200;
-        try
-        {
-            while (timeout > 0 && audioInput.getState() != AudioRecord.STATE_INITIALIZED)
-            {
+        try {
+            while (timeout > 0 && audioInput.getState() != AudioRecord.STATE_INITIALIZED) {
                 Thread.sleep(50);
                 timeout -= 50;
             }
-        } catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
         }
          
-        if (audioInput.getState() != AudioRecord.STATE_INITIALIZED)
-        {
+        if (audioInput.getState() != AudioRecord.STATE_INITIALIZED) {
             Log.e(TAG, "Audio reader failed to initialize");
             readError(Listener.ERR_INIT_FAILED);
             running = false;
             return;
         }
          
-        try
-        {
+        try {
             Log.i(TAG, "Reader: Start Recording");
             audioInput.startRecording();
-            while (running)
-            {
+            
+            while (running) {
                 long stime = System.currentTimeMillis();
                  
                 if (!running)
@@ -140,80 +123,66 @@ public class AudioReader
                     readSize = space;
                 buffer = inputBuffer[inputBufferWhich];
                 index = inputBufferIndex;
-                 
-                synchronized (buffer)
-                {
+            	
+                //synchronized (buffer) 
+                //{
                     int nread = audioInput.read(buffer, index, readSize);
-                     
+                    
                     boolean done = false;
                     if (!running)
                         break;
                      
-                    if (nread < 0)
-                    {
+                    if (nread < 0) {
                         Log.e(TAG, "Audio read failed: error " + nread);
                         readError(Listener.ERR_READ_FAILED);
                         running = false;
                         break;
                     }
+                    
                     int end = inputBufferIndex + nread;
                     if (end >= inputBlockSize)
                     {
                         inputBufferWhich = (inputBufferWhich + 1) % 2;
                         inputBufferIndex = 0;
                         done = true;
-                    }
-                    else
+                    } else {
                         inputBufferIndex = end;
-                     
-                    if (done)
-                    {
-                        readDone(buffer);
-                         
-                        long etime = System.currentTimeMillis();
-                        long sleep = sleepTime - (etime - stime);
-                        if (sleep < 5)
-                            sleep = 5;
-                        try
-                        {
-                            buffer.wait(sleep);
-                        } catch (InterruptedException e)
-                        {
-                        }
                     }
-                }
+                     
+                    if (done) {
+                    	//Thread t= new Thread(new ReadDone(buffer.clone()));
+                    	//t.start();
+                    	
+                        readDone(buffer.clone());
+                    }
+                //}
             }
-        } finally
-        {
+        } finally {
             Log.i(TAG, "Reader: Stop Recording");
             if (audioInput.getState() == AudioRecord.RECORDSTATE_RECORDING)
                 audioInput.stop();
         }
     }
      
-    private void readDone(short[] buffer)
-    {
-        synchronized (this)
-        {
-            audioData = buffer;
-            ++audioSequence;
-             
-            short[] buffer2 = null;
-            if (audioData != null && audioSequence > audioProcessed)
-            {
-                audioProcessed = audioSequence;
-                buffer2 = audioData;
-            }
-             
-            if (buffer2 != null)
-            {
-                final int len = buffer2.length;
-                
-                inputListener.onReadComplete(calculatePowerDb(buffer2, 0, len));
-                buffer2.notify();
-            }
+    private void readDone(short[] buffer) {
+        ArrayList<Double> data = new ArrayList<Double>();
+        
+        for (short value : buffer) {
+        	data.add((double)value / Short.MAX_VALUE);
+        	
+        	if (data.size() == 1024) {
+                FrequencyAnalyzer fa = new FrequencyAnalyzer(data);
+                double probableFrequency = fa.getMostProbableFrequency(MainActivity.MIN_FREQUENCY, MainActivity.MAX_FREQUENCY, 0.25);
+
+                Message message = new Message();
+                message.what = MainHandler.MODE_AUDIO_DECODE;
+                message.obj = probableFrequency;
+                handler.sendMessage(message);
+                data.clear();
+        	}
         }
     }
+    
      
     private void readError(int code)
     {
@@ -235,4 +204,33 @@ public class AudioReader
     private long audioProcessed = 0;
     private static final float MAX_16_BIT = 32768;
     private static final float FUDGE = 0.6f;
+    
+    class ReadDone implements Runnable {
+    	public short[] buffer;
+    	public ReadDone(short[] buffer){
+    		this.buffer = buffer;
+    	}
+    	
+		@Override
+		public void run() {
+			ArrayList<Double> data = new ArrayList<Double>();
+	        
+	        for (short value : buffer) {
+	        	data.add((double)value / Short.MAX_VALUE);
+	        	
+	        	if (data.size() == 1024) {
+	                FrequencyAnalyzer fa = new FrequencyAnalyzer(data);
+	                double probableFrequency = fa.getMostProbableFrequency(MainActivity.MIN_FREQUENCY, MainActivity.MAX_FREQUENCY, 0.25);
+
+	                Message message = new Message();
+	                message.what = MainHandler.MODE_AUDIO_DECODE;
+	                message.obj = probableFrequency;
+	                handler.sendMessage(message);
+	                data.clear();
+	        	}
+	        }
+			
+		}
+    	
+    }
 }

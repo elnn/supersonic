@@ -3,13 +3,9 @@ package com.younha.supersonic;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.younha.supersonic.HttpClient.SendHttp;
-
 import android.app.Activity;
 import android.content.Context;
-import android.media.AudioFormat;
 import android.media.AudioManager;
-import android.media.AudioTrack;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -20,109 +16,137 @@ import android.widget.TextView;
 
 
 public class MainActivity extends Activity {
-	private static final double MIN_FREQUENCY = 18000;
-    private static final double MAX_FREQUENCY = 19000;
-    private static final String ALPHABET = "0123456789";
-    
-    private String uuid;
-    private HttpClient client;
+	public static final double MIN_FREQUENCY = 17743;
+	public static final double MAX_FREQUENCY = 19466;
+	private static final String ALPHABET = "^0123456789$";
+	private static final int AUDIO_READER_BLOCK_SIZE = 2048;
 
-    private Handler handler;
-    private SoundScheduler soundScheduler;
-    private TextView textviewStatus;
-    
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+	private SignalController signalController;
 
-        Context c = this.getApplicationContext();
-        this.uuid = Secure.getString(c.getContentResolver(), Secure.ANDROID_ID);
-        this.client = new HttpClient();
-        registerDevice();
+	private int userId;
+	private String uuid;
+	private HttpClient client;
+	private String lastResult;
 
-        initAudioReader();
-    
-        textviewStatus = (TextView) findViewById(R.id.text_notif);
-        handler = new MainHandler();
-        
-        soundScheduler = new SoundScheduler(handler);
+	private MainHandler handler;
+	private SoundScheduler soundScheduler;
+	private TextView textviewStatus;
+	private TextView textviewDecode;
 
-        String testInput = "0123456789";
-        registerSounds(testInput);
-        
-        soundScheduler.start();
-    }
-    
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-    
-    private void registerDevice() {
-        HttpClient.SendHttp send = client.Send();
-        send.execute("register", uuid, new HttpClient.HttpListener() {
+		Context c = this.getApplicationContext();
+		this.uuid = Secure.getString(c.getContentResolver(), Secure.ANDROID_ID);
+		this.client = new HttpClient();
+		this.handler = new MainHandler();
+		this.lastResult = "";
+		soundScheduler = new SoundScheduler(handler);
+		signalController = new SignalController(ALPHABET, MIN_FREQUENCY, MAX_FREQUENCY);
+		textviewStatus = (TextView) findViewById(R.id.text_notif);
+		textviewDecode = (TextView) findViewById(R.id.textDecode);
 
-            @Override
-            public void onSendError(int error) {
-            }
+		registerDevice();
+		initAudioReader();
+	}
 
-            @Override
-            public void onSendComplete(JSONObject result) {
-                try {
-                    Log.e("onsend", result.getString("user_id"));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-    
-    private void registerSounds(String inputString) {
-        SignalEncoder encoder = new SignalEncoder(ALPHABET, MIN_FREQUENCY, MAX_FREQUENCY);
-        
-        for (char code : inputString.toCharArray()) {
-        	double frequency = encoder.encode(code);
-        	Sound sound = new Sound(frequency);
-        	soundScheduler.addSound(sound);
-        }    	
-    }
+	@Override
+	protected void onResume() {
+		super.onResume();
+	}
 
-    void initAudioReader() {
-        AudioReader audioReader = new AudioReader();
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+	}
 
-        final int inputBlockSize = 256;
-        final int sampleDecimate = 1;
+	private void registerDevice() {
+		HttpClient.SendHttp send = client.Send();
+		send.execute("register", uuid, new HttpClient.HttpListener() {
 
-        audioReader.startReader(Sound.getSampleRate(), inputBlockSize * sampleDecimate, new AudioReader.Listener() {
-            @Override
-            public final void onReadComplete(int dB) {
-            }
-            
-            @Override
-            public void onReadError(int error) {
-            }
-        });
-    }
+			@Override
+			public void onSendError(int error) {
+			}
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-    
-    private class MainHandler extends Handler {
-    	@Override
-    	public void handleMessage(Message msg) {
-    		super.handleMessage(msg);
-    		textviewStatus.setText((String) msg.obj);
-    	}
-    }
+			@Override
+			public void onSendComplete(JSONObject result) {
+				try {
+					userId = Integer.parseInt(result.getString("user_id"));
+					StringBuilder userStringBuilder = new StringBuilder();
+					for (char c : (userId + "").toCharArray()) {
+						userStringBuilder = userStringBuilder.append(c);
+						userStringBuilder = userStringBuilder.append("$");
+					}
+					userStringBuilder = userStringBuilder.append("^^^");
+					registerSounds(userStringBuilder.toString());
+					soundScheduler.start();
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	private void registerSounds(String inputString) {
+
+		for (char code : inputString.toCharArray()) {
+			double frequency = signalController.encode(code);
+			Sound sound = new Sound(frequency);
+			soundScheduler.addSound(sound);
+		}    	
+	}
+
+	void initAudioReader() {
+		AudioReader audioReader = new AudioReader(handler);
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+		audioReader.startReader(Sound.getSampleRate(), AUDIO_READER_BLOCK_SIZE, new AudioReader.Listener() {
+			@Override
+			public final void onReadComplete(int dB) {
+			}
+
+			@Override
+			public void onReadError(int error) {
+				Log.e("error", "errorcode : " + error);
+			}
+		});
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+
+	public class MainHandler extends Handler {
+
+		public static final int MODE_TEXTVIEW_UPDATE = 1;
+		public static final int MODE_AUDIO_DECODE = 2;
+
+		@Override
+		public void handleMessage(Message msg) {
+			super.handleMessage(msg);
+
+			switch(msg.what)
+			{
+			case MODE_TEXTVIEW_UPDATE:
+				textviewStatus.setText((String) msg.obj);
+				break;
+			case MODE_AUDIO_DECODE:
+				double frequency = (Double)msg.obj;
+				if(frequency > 0) {
+					char c = signalController.decode((Double)msg.obj);
+					lastResult += c;
+					if( lastResult.length() > 10 ) {
+						lastResult = lastResult.substring(lastResult.length() - 10 );
+					}
+				}
+				textviewDecode.setText(lastResult);
+				break;
+			}
+		}
+	}
 }

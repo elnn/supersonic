@@ -2,6 +2,8 @@ package com.younha.supersonic;
 
 import java.util.ArrayList;
 
+import com.younha.supersonic.MainActivity.MainHandler;
+
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
@@ -64,6 +66,7 @@ public class SoundScheduler {
 			while (true) {
 				for (Sound sound : soundList) {
 					Message emitMessage = new Message();
+					emitMessage.what = MainHandler.MODE_TEXTVIEW_UPDATE;
 					emitMessage.obj = "Emit " + sound.getFrequency();
 					handler.sendMessage(emitMessage);
 					
@@ -84,6 +87,7 @@ public class SoundScheduler {
 				}
 
 				Message clearMessage = new Message();
+				clearMessage.what = MainHandler.MODE_TEXTVIEW_UPDATE;
 				clearMessage.obj = "Clear";
 				handler.sendMessage(clearMessage);
 
