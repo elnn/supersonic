@@ -9,19 +9,11 @@
     tools:context=".MainActivity" >
     
     <TextView
-        android:id="@+id/text_freq"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="160dp"
-        android:text="8000" />
-    
-    <TextView
         android:id="@+id/text_notif"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="220dp"
+        android:layout_marginTop="60dp"
         android:text="ready"
         android:textSize="30dp" />
     
@@ -30,8 +22,74 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="280dp"
+        android:layout_marginTop="120dp"
         android:text="decode"
         android:textSize="30dp" />
 
+    
+    <TextView
+        android:id="@+id/textExtra"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="180dp"
+        android:text="decode"
+        android:textSize="30dp" />
+
+    <EditText
+        android:id="@+id/editAge"
+        android:layout_width="100dp"
+        android:layout_height="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="57dp"
+        android:layout_toLeftOf="@+id/editLocation"
+        android:hint="나이"
+        android:textSize="15dp" />
+
+    <Button
+        android:id="@+id/updateButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/editAge"
+        android:layout_alignRight="@+id/editLocation"
+        android:text="Update" />
+
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/updateButton"
+        android:layout_alignLeft="@+id/editAge" 
+        android:checkedButton="@+id/man"
+        >
+
+        <RadioButton
+            android:id="@+id/man"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/editLocation"
+            android:layout_marginBottom="33dp"
+            android:text="남" />
+
+        <RadioButton
+            android:id="@+id/woman"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/man"
+            android:layout_alignBottom="@+id/editLocation"
+            android:text="여" />
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/editLocation"
+        android:layout_width="160dp"
+        android:layout_height="30dp"
+        android:layout_alignBottom="@+id/radioGroup"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="30dp"
+        android:layout_marginRight="64dp"
+        android:ems="10"
+        android:hint="위치"
+        android:textSize="15dp" />
+    
 </RelativeLayout>

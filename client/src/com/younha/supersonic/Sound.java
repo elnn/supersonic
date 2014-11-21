@@ -2,7 +2,7 @@ package com.younha.supersonic;
 
 
 public class Sound {
-	private static final double DURATION_IN_SECONDS = 1.0;
+	private static final double DURATION_IN_SECONDS = 0.5;
 	private static final int SAMPLE_RATE = 44100;
 	private static final int SAMPLE_SIZE = (int) (DURATION_IN_SECONDS * SAMPLE_RATE);
 	
