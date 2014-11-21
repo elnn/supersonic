@@ -1,6 +1,8 @@
 # Python
 *.pyc
 
+mock_data/
+
 # SQLite3
 *.db
 
