@@ -67,7 +67,7 @@ public class SoundScheduler {
 				for (Sound sound : soundList) {
 					Message emitMessage = new Message();
 					emitMessage.what = MainHandler.MODE_TEXTVIEW_UPDATE;
-					emitMessage.obj = "Emit " + sound.getFrequency();
+					emitMessage.obj = "Send: " + (int)sound.getFrequency();
 					handler.sendMessage(emitMessage);
 					
 					AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_RING,

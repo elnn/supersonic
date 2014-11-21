@@ -172,12 +172,13 @@ public class AudioReader
         	
         	if (data.size() == 1024) {
                 FrequencyAnalyzer fa = new FrequencyAnalyzer(data);
-                double probableFrequency = fa.getMostProbableFrequency(MainActivity.MIN_FREQUENCY, MainActivity.MAX_FREQUENCY, 0.25);
+                double probableFrequency = fa.getMostProbableFrequency(MainActivity.MIN_FREQUENCY2, MainActivity.MAX_FREQUENCY2, 0.25);
 
                 Message message = new Message();
                 message.what = MainHandler.MODE_AUDIO_DECODE;
                 message.obj = probableFrequency;
                 handler.sendMessage(message);
+                
                 data.clear();
         	}
         }
@@ -205,32 +206,4 @@ public class AudioReader
     private static final float MAX_16_BIT = 32768;
     private static final float FUDGE = 0.6f;
     
-    class ReadDone implements Runnable {
-    	public short[] buffer;
-    	public ReadDone(short[] buffer){
-    		this.buffer = buffer;
-    	}
-    	
-		@Override
-		public void run() {
-			ArrayList<Double> data = new ArrayList<Double>();
-	        
-	        for (short value : buffer) {
-	        	data.add((double)value / Short.MAX_VALUE);
-	        	
-	        	if (data.size() == 1024) {
-	                FrequencyAnalyzer fa = new FrequencyAnalyzer(data);
-	                double probableFrequency = fa.getMostProbableFrequency(MainActivity.MIN_FREQUENCY, MainActivity.MAX_FREQUENCY, 0.25);
-
-	                Message message = new Message();
-	                message.what = MainHandler.MODE_AUDIO_DECODE;
-	                message.obj = probableFrequency;
-	                handler.sendMessage(message);
-	                data.clear();
-	        	}
-	        }
-			
-		}
-    	
-    }
 }

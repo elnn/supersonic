@@ -22,8 +22,10 @@ import android.widget.TextView;
 
 
 public class MainActivity extends Activity {
-	public static final double MIN_FREQUENCY = 17743;
-	public static final double MAX_FREQUENCY = 19466;
+	public static final double MIN_FREQUENCY1 = 44100. / 1024 * 402;
+	public static final double MAX_FREQUENCY1 = 44100. / 1024 * 424;
+	public static final double MIN_FREQUENCY2 = 44100. / 1024 * 442;
+	public static final double MAX_FREQUENCY2 = 44100. / 1024 * 464;
 	private static final String ALPHABET = "^0123456789$";
 	private static final int AUDIO_READER_BLOCK_SIZE = 2048;
 
@@ -39,6 +41,7 @@ public class MainActivity extends Activity {
 	private MainHandler handler;
 	private SoundScheduler soundScheduler;
 	private TextView textviewStatus;
+	private TextView textviewRead;
 	private TextView textviewDecode;
 	private TextView textviewExtra;
 	private EditText editTextAge;
@@ -58,9 +61,10 @@ public class MainActivity extends Activity {
 		this.realResult = "";
 		this.beforeRealResult = "";
 		soundScheduler = new SoundScheduler(handler);
-		signalController = new SignalController(ALPHABET, MIN_FREQUENCY, MAX_FREQUENCY);
+		signalController = new SignalController(ALPHABET, MIN_FREQUENCY1, MAX_FREQUENCY1, MIN_FREQUENCY2, MAX_FREQUENCY2);
 		
 		textviewStatus = (TextView) findViewById(R.id.text_notif);
+		textviewRead = (TextView) findViewById(R.id.textRead);
 		textviewDecode = (TextView) findViewById(R.id.textDecode);
 		textviewExtra = (TextView) findViewById(R.id.textExtra);
 
@@ -266,9 +270,9 @@ public class MainActivity extends Activity {
 						lastResult = lastResult.substring(lastResult.length() - 10);
 					}
 
-					if (lastResult.length() > 5 &&
+					if (lastResult.length() > 4 &&
 						lastResult.charAt(lastResult.length() - 1) == '^' &&
-						hasConcecutiveCharacter(5, 0)) {
+						hasConcecutiveCharacter(4, 0)) {
 
 						lastResult = "";
 						if (realResult.length() > 0) {
@@ -288,6 +292,7 @@ public class MainActivity extends Activity {
 					}
 				}
 				textviewDecode.setText(realResult);
+				textviewRead.setText("Read: " + (int)frequency);
 				break;
 			}
 		}

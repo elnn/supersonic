@@ -18,11 +18,20 @@
         android:textSize="30dp" />
     
     <TextView
-        android:id="@+id/textDecode"
+        android:id="@+id/textRead"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="120dp"
+        android:text="decode"
+        android:textSize="30dp" />
+    
+    <TextView
+        android:id="@+id/textDecode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="180dp"
         android:text="decode"
         android:textSize="30dp" />
 
@@ -32,8 +41,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="180dp"
-        android:text="decode"
+        android:layout_marginTop="240dp"
+        android:text="Text will be here"
         android:textSize="30dp" />
 
     <EditText

@@ -55,7 +55,8 @@ public class FrequencyAnalyzer {
         if (maxRank + 1 >= frequencyData.size() * (1.0 - percentage)) {
             return indexToFrequency(maxRankIndex);
         }
-        return -1.0;
+        
+        return -1000.0;
     }
     
 }
