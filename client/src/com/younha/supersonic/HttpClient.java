@@ -29,25 +29,17 @@ public class HttpClient {
     }
 	
 	public HttpClient(Context c){
-		uuid = Secure.getString(c.getContentResolver(),
-	            Secure.ANDROID_ID);
+		uuid = Secure.getString(c.getContentResolver(), Secure.ANDROID_ID);
 		
 	}
 	public SendHttp Send(){
 		return new SendHttp();
 	}
-	
 
-	
-	
 	//url, value, Listener
-public class SendHttp extends AsyncTask<Object, Void, JSONObject>{
-		
-	public SendHttp(){
-		
-	}
+	public class SendHttp extends AsyncTask<Object, Void, JSONObject>{
 	
-	HttpListener listener;
+		HttpListener listener;
 	
 		@Override
         protected void onPreExecute() {
@@ -56,7 +48,7 @@ public class SendHttp extends AsyncTask<Object, Void, JSONObject>{
 		
 		@Override
 	    protected void onPostExecute(JSONObject result) {
-	        if(result == null){
+	        if (result == null) {
 	        	listener.onSendError(0);
 	        }
 	        else{

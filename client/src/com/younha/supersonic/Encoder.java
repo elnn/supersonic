@@ -5,42 +5,37 @@ import java.util.HashMap;
 import android.util.Log;
 
 public class Encoder {
-	
-	//String[] alphabat;
-	//double min_frequency;
-	//double max_frequency;
-	
-	HashMap<Character,Double> map;
-	
-	public Encoder(CharSequence alphabat, double min_frequency, double max_frequency){
-		
-		
-		//this.alphabat = alphabat;
-		//this.min_frequency = min_frequency;
-		//this.max_frequency = max_frequency;
-		
+
+	private CharSequence alphabet;
+	private double minFrequency;
+	private double maxFrequency;
+	private HashMap<Character,Double> map;
+
+	public Encoder(CharSequence alphabet, double minFrequency, double maxFrequency) {
+		this.alphabet = alphabet;
+		this.minFrequency = minFrequency;
+		this.maxFrequency = maxFrequency;
+
 		map = new HashMap<Character, Double>();
-		
+
 		double interval = 0.0;
-		if(alphabat.length() > 1){
-			interval = (max_frequency - min_frequency) / (alphabat.length() - 1);
+		if (alphabet.length() > 1) {
+			interval = (maxFrequency - minFrequency) / (alphabet.length() - 1);
 		}
-		
-		for(int i = 0; i<alphabat.length(); i++){
-			map.put(alphabat.charAt(i), min_frequency + i * interval);
+
+		for (int i = 0; i<alphabet.length(); i++) {
+			map.put(alphabet.charAt(i), minFrequency + i * interval);
 		}
-		
-		
 	}
-	
-	public double[] encode(CharSequence input){
+
+	public double[] encode(CharSequence input) {
 		double[] encoded = new double[input.length()];
-		for(int i = 0; i<input.length(); i++){
+		for (int i = 0; i<input.length(); i++) {
 			encoded[i] = map.get(input.charAt(i));
 			Log.e("encoding", encoded[i] + "");
-			
+
 		}
 		return encoded;
-		
+
 	}
 }
