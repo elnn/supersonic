@@ -96,7 +96,11 @@ def set_info_by_uuid(uuid, info):
 @app.route('/register/<uuid>')
 def register(uuid):
     user_id = insert_new_user(uuid)
-    return json.dumps({'user_id': user_id, 'uuid': uuid})
+
+    return json.dumps({
+        'user_id': user_id,
+        'uuid': uuid
+    })
 
 
 @app.route('/user/<int:user_id>')
