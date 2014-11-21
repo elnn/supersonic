@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS sonic_user;
+CREATE TABLE sonic_user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uuid TEXT UNIQUE NOT NULL,
+    extra TEXT NOT NULL
+);
